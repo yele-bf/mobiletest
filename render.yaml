@@ -12,7 +12,6 @@ services:
       - key: SPEEDTEST_DATABASE_NAME
         value: yele_speedtest
       - key: SPEEDTEST_DATABASE_CONNECTION_STRING
-        sync: false
         value: mongodb+srv://yelebf_db_user:47hArVkmjrEoaCIy@yele.q3ptla3.mongodb.net/?appName=yele
     autoDeploy: true
     region: frankfurt
