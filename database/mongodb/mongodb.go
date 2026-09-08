@@ -46,6 +46,9 @@ type Document struct {
 	SimOperator string  `bson:"sim_operator" json:"simOperator"`
 	CellularTech string `bson:"cellular_tech" json:"cellularTech"`
 	DeviceModel string  `bson:"device_model" json:"deviceModel"`
+	// IMP-13 : UUID d'appareil anonyme et stable, généré par l'app. Permet le
+	// suivi longitudinal des mesures par appareil sans aucune donnée privée.
+	DeviceID    string  `bson:"device_id"    json:"deviceId"`
 	Location    string  `bson:"location"     json:"location"`
 	Latitude    float64 `bson:"latitude"     json:"latitude"`
 	Longitude   float64 `bson:"longitude"    json:"longitude"`
@@ -82,6 +85,7 @@ type mobileExtra struct {
 	SimOperator     string  `json:"simOperator"`
 	CellularTech    string  `json:"cellularTech"`
 	DeviceModel     string  `json:"deviceModel"`
+	DeviceID        string  `json:"deviceId"`
 	Location        string  `json:"location"`
 	Latitude        float64 `json:"latitude"`
 	Longitude       float64 `json:"longitude"`
@@ -694,6 +698,7 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 			doc.SimOperator = extra.SimOperator
 			doc.CellularTech = extra.CellularTech
 			doc.DeviceModel = extra.DeviceModel
+			doc.DeviceID = extra.DeviceID
 			doc.Location = extra.Location
 			doc.Latitude = extra.Latitude
 			doc.Longitude = extra.Longitude
