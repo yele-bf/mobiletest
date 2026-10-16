@@ -667,7 +667,7 @@ func (m *MongoDB) FetchAdvancedStats() ([]OperatorAdvancedStats, error) {
 	return result, nil
 }
 
-// ── Baromètre (IMP-11) ────────────────────────────────────────────────────────
+// ── Baromètre (IMP-09) ────────────────────────────────────────────────────────
 
 // BarometerResult situe un résultat de test dans la base des mesures passées.
 type BarometerResult struct {

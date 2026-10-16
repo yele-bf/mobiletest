@@ -9,7 +9,7 @@ import (
 )
 
 // BarometerHandler situe un résultat dans la base des mesures existantes
-// (IMP-11 — baromètre de comparaison, façon nPerf).
+// (IMP-09 — baromètre de comparaison, façon nPerf ; ancien libellé V4 : IMP-11).
 //
 // GET /api/dashboard/barometer?download=12.4&upload=2.1&ping=45
 //
