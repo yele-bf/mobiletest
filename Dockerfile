@@ -17,4 +17,4 @@ COPY web/ ./web/
 
 EXPOSE 8989
 
-CMD ["./speedtest", "--asset-path", "/app/web/assets"]
+CMD ["./speedtest"]
