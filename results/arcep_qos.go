@@ -1,17 +1,16 @@
-// Squelette du référentiel QoS ARCEP côté API (IMP-06).
+// Bloc « qos » du référentiel ARCEP côté API (IMP-06).
 //
-// `main` ne porte pas encore le module ARCEP : `results/arcep.go` et
-// `config/seuils.json` vivent sur une branche non fusionnée, et aucune route
-// `/api/arcep/*` n'est branchée. Ce fichier isole donc le bloc « qos » du
-// référentiel (navigation web / streaming vidéo) sous forme de types, d'un
-// décodeur et d'une validation, sans exposer d'endpoint.
+// Une seule représentation de ces seuils dans le code : `arcepConfig.Qos`
+// (results/arcep.go) les décode avec ces types, et `loadArcepFile` les valide
+// au démarrage avec `validate()`. Les routes `/api/arcep/*` les renvoient aux
+// clients, qui les affichent avec les valeurs du test.
 //
-// Objectif : quand le module ARCEP reviendra sur `main`, les seuils lus seront
-// les mêmes que ceux utilisés par le scoring de l'application, avec une seule
-// source de vérité (`config/seuils.json`, version 3).
+// Les valeurs ne sont pas recopiées ici : la source de vérité reste
+// `config/seuils.json` (version 3), partagée avec le scoring de l'application.
 //
-// Règle d'honnêteté (cf. `seuil.md`) : la comparaison ARCEP est simplifiée.
-// Aucune réponse ne doit conclure « conforme » à partir de ces seuils.
+// Règle d'honnêteté (cf. champ `method_note`) : la comparaison ARCEP est
+// SIMPLIFIÉE (moyenne vs seuil), pas la méthode officielle (90 % des mesures
+// au-dessus du seuil). Aucune réponse ne conclut « conforme ».
 package results
 
 import (
@@ -60,8 +59,8 @@ type ArcepQosVideo struct {
 
 // ParseArcepQosSeuils décode le bloc « qos » d'un fichier `seuils.json`.
 //
-// Le fichier est celui de `config/seuils.json` (monté en volume dans Docker) :
-// les seuils ne sont pas recopiés dans le code, seule leur forme l'est.
+// Le fichier est celui de `config/seuils.json` (référentiel versionné du
+// dépôt) : les seuils ne sont pas recopiés dans le code, seule leur forme l'est.
 func ParseArcepQosSeuils(raw []byte) (*ArcepQosSeuils, error) {
 	var document struct {
 		Qos *ArcepQosSeuils `json:"qos"`

@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-14 | IMP-11 | feat | _(exemple — à remplacer)_ | COMPAORE Bobodo Kévin Aymar | `imp/IMP-11-export-csv` | _après merge_ | local Chrome | En cours |
 | 2026-10-14 | ISS-12 | fix | _(exemple — à remplacer)_ | COMPAORE Bobodo Kévin Aymar | `iss/ISS-12-reglages` | _après merge_ | APK réel | Transmis |
-| 2026-10-26 | IMP-06 | feat | NIKIEMA Abdoul Fatahou | NIKIEMA Abdoul Fatahou / NONGUIERMA WENDINSOO LEONEL | `feat/IMP-06-seuils-arcep` | _après merge_ | Squelette : `go build` + `go vet` + `go test ./...` ; jeux de valeurs autour des seuils à faire côté app | En cours |
+| 2026-10-26 | IMP-06 | feat | NIKIEMA Abdoul Fatahou | NIKIEMA Abdoul Fatahou / NONGUIERMA WENDINSOO LEONEL | `feat/IMP-06-seuils-arcep` | _après merge_ | Référentiel v3 + 3 routes `/api/arcep/*` : `go build`/`vet`/`test` verts, 7 tests `results`, démarrage « 10 zones chargées depuis config/seuils.json » ; JSON non relu faute d'instance MongoDB | En cours |
 
 ## Nomenclature V14 vs V11 vs V4 (à lire avant de citer un Sous-ID)
 

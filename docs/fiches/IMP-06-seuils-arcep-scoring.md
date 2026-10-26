@@ -1,4 +1,4 @@
-# IMP-06 — Seuils ARCEP lisibles par l'API (volet référentiel)
+# IMP-06 — Seuils ARCEP lisibles par l'API (volet référentiel et endpoints)
 
 | Champ | Valeur |
 |---|---|
@@ -15,60 +15,79 @@ Le classeur donne IMP-06 sur `mobilefront` **et** `mobiletest` : l'application
 ne peut ancrer ses scores sur le référentiel ARCEP que si l'API expose les
 mêmes seuils qu'elle.
 
-Or, sur `main`, le module ARCEP n'est plus présent : ni `config/seuils.json`,
+Or, sur `main`, le module ARCEP n'était plus présent : ni `config/seuils.json`,
 ni `results/arcep.go`, ni les routes `/api/arcep/*`. Le référentiel validé
-(version 3) n'existe que sur une branche non fusionnée, alors que le backend
-Docker en service a bien été construit à partir de cet état. Résultat : aucun
+(version 3) ne vivait plus que sur la branche `fix/ARCEP-routes` du 20/10,
+restée sans PR et dont le dernier commit ne compilait pas (`web/web.go`
+remplacé par une version gin alors que `main` utilise chi). Résultat : aucun
 moyen, depuis `main`, de lire les seuils ARCEP qui ont servi à valider l'item.
 
 ## Correction
 
-Cette branche prépare le volet référentiel sans réintroduire tout le module :
+Le module est rétabli sur `main` à partir du contenu de `fix/ARCEP-routes`
+(commit `cd1556b`, auteur `TESTEUR04`), sans rien réécrire du référentiel :
 
-- `results/arcep_qos.go` : types du bloc « qos » de `config/seuils.json`
-  (navigation : 30 s / 95 % / connexion 20 s / 95 % ; streaming : 5 s / 95 % ;
-  définition Yélé : rebuffering ≤ 10 %, résolution ≥ 480p, 0 interruption),
-  décodeur `ParseArcepQosSeuils` et validation.
-- `results/arcep_qos_test.go` : chargement du référentiel v3, refus d'un bloc
-  `qos` absent, refus d'un seuil nul, acceptation de la borne 100 %.
+- `config/seuils.json` : référentiel **version 3**, repris à l'identique. Sa
+  provenance est dans le fichier lui-même (`source`, `periode`,
+  `method_note`) — aucune valeur n'a été inventée ni complétée.
+- `results/arcep.go` : module de comparaison (zones par GPS ou par ville,
+  profils D1–D4, verdicts QoS), repris à l'identique.
+- `database/mongodb/arcep.go` : agrégation `FetchArcepCityStats` (moyennes par
+  ville), reprise à l'identique.
+- `results/arcep_qos.go` : types du bloc « qos », décodeur et validation
+  (conservés de la première version de cette PR). `arcepConfig.Qos` réutilise
+  désormais ces types : une seule représentation du bloc QoS dans le code.
+- `web/web.go` : les trois routes `/api/arcep/comparison`,
+  `/api/arcep/measure` et `POST /api/arcep/measure/batch` sont branchées en
+  syntaxe **chi**, à côté des routes dashboard.
+- `main.go` : `results.LoadArcepConfig("config/seuils.json")` au démarrage.
+  Fichier absent ou invalide ⇒ les routes répondent une erreur explicite ; le
+  backend ne sert jamais de seuils inventés.
 
 Choix non évidents :
 
-- Aucune route n'est branchée : `web/web.go` sur `main` ne connaît pas ARCEP, et
-  exposer `/api/arcep/qos` sans le reste du module laisserait une API à moitié
-  vivante. Le branchement sera fait avec le retour du module.
-- Les seuils ne sont pas recopiés en Go : le fichier ne décrit que leur forme,
-  la valeur reste dans `config/seuils.json` (règle posée par `seuil.md`).
-- La validation refuse un seuil à zéro : il validerait n'importe quelle mesure
-  et produirait un score faussement bon.
+- Le `web/web.go` de `cd1556b` n'a **pas** été repris : il troquait chi contre
+  gin, supprimait `ListenAndServe` et emportait `go-chi/cors` et
+  `pires/go-proxyproto` avec lui. Seules les trois lignes de routes étaient
+  réutilisables.
+- `results/arcep_qos.go` valide désormais le référentiel au chargement
+  (`loadArcepFile`), pas seulement à la demande : un `page_load_s` à zéro
+  validerait n'importe quelle mesure et produirait un score faussement bon.
+- Les commentaires qui renvoyaient à `seuil.md` (absent du dépôt) et à un
+  montage Docker (la solution n'utilise pas Docker) pointent maintenant vers
+  le référentiel et vers cette fiche.
 
 ## Critère d'acceptation
 
 Pour chaque niveau de performance, le score obtenu correspond aux seuils
-validés — la partie vérifiable ici est que l'API lit **exactement** le
-référentiel validé (30 / 95 / 20 / 95 ; 5 / 95) et refuse un référentiel
-incomplet.
-
-**Non atteint à ce stade** : aucun endpoint ne publie ces seuils, donc
-l'application ne peut pas encore les consommer.
+validés. Vérifiable ici : l'API charge **exactement** le référentiel version 3
+(30 s / 95 % / 20 s / 95 % en navigation, 5 s / 95 % en streaming, profils
+D1–D4 et 10 zones) et publie ces valeurs sur `/api/arcep/*`.
 
 ## Validation
 
-- **Automatisée** : `go build ./...`, `go vet ./...`, `go test ./...` exécutés
-  sur la branche.
+- **Automatisée** : `go build ./...`, `go vet ./...`, `go test ./...` verts sur
+  la branche ; 7 tests `results`, dont `TestLoadArcepFileReferentiel` qui
+  charge le fichier livré et contrôle version, profils, rayon, seuils QoS et
+  alias de zone, et deux tests de refus (profil inconnu, seuil QoS nul).
 - **Support imposé par le classeur** : local (jeux de valeurs autour des
-  seuils) — **non fait** pour la partie score, qui vit dans `mobilefront`.
-- **Preuve** : sortie de `go test ./results -run Arcep` à joindre à la PR.
+  seuils) — fait le 2026-10-26 : binaire compilé lancé sur
+  `config/seuils.json`, journal `arcep: 10 zones chargées depuis
+  config/seuils.json (config v3)`, les trois routes répondent (garde-fou
+  `database_type=mongodb` renvoyé tel quel hors MongoDB).
+- **Preuve** : sortie de `go test ./results -run Arcep -v` (7/7 PASS) et
+  journal de démarrage cité ci-dessus.
 
 ## Limites connues
 
-- Aucun endpoint exposé ; le module ARCEP (`results/arcep.go`,
-  `config/seuils.json`, routes `/api/arcep/*`) n'est pas sur `main` et sa
-  réintroduction est une décision d'équipe, pas un effet de bord de cet item.
+- Les réponses JSON des handlers n'ont pas pu être relues de bout en bout :
+  elles joignent les moyennes MongoDB, et aucune instance de test n'est
+  disponible ici. Le chargement du référentiel, les routes et les tests, eux,
+  sont vérifiés.
 - Le registre de ce dépôt contient encore deux lignes d'exemple
   (`_(exemple — à remplacer)_`, 2026-10-14) qui valident `IMP-11` et `ISS-12`
-  sans contribution réelle : le garde-fou les accepte. À nettoyer, comme cela a
-  été fait sur `mobilefront` (PR #39).
+  sans contribution réelle : le garde-fou les accepte. À nettoyer avec le
+  durcissement du garde-fou (travail d'équipe, pas de cet item).
 - Le tableau « Suivi des 27 items » en fin de registre ne compte pas pour le
   garde-fou : seule la ligne datée ajoutée ici fait foi.
 
@@ -80,8 +99,7 @@ l'application ne peut pas encore les consommer.
 - [x] Les champs du tableau viennent de `docs/items-v14.json`.
 - [x] Une ligne **datée** a été ajoutée au tableau d'historique de
       `docs/registre-revisions.md` (sans elle, `guard` est rouge).
-- [ ] Le `CHANGELOG.md` du dépôt a une entrée sous `## [Non publiée]` —
-      **le fichier n'existe pas dans ce dépôt** (§3 du CONTRIBUTING non
-      appliqué ici) ; à créer avec le socle, hors périmètre de cet item.
-- [ ] Le corps de la PR porte `Closes yele-bf/mobilefront#12` et la même liste
-      de validation.
+- [x] Le `CHANGELOG.md` du dépôt a une entrée sous `## [Non publiée]`
+      (fichier créé avec cet item, §3 du CONTRIBUTING).
+- [x] Le corps de la PR porte la référence à l'issue et la même liste de
+      validation.
