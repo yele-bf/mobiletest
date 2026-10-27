@@ -6,8 +6,6 @@
 
 | Date | Sous-ID (V14) | Type | Agent | Owner (classeur) | Branche / PR | Commit | Validation | Statut |
 |---|---|---|---|---|---|---|---|---|
-| 2026-10-14 | IMP-11 | feat | _(exemple — à remplacer)_ | COMPAORE Bobodo Kévin Aymar | `imp/IMP-11-export-csv` | _après merge_ | local Chrome | En cours |
-| 2026-10-14 | ISS-12 | fix | _(exemple — à remplacer)_ | COMPAORE Bobodo Kévin Aymar | `iss/ISS-12-reglages` | _après merge_ | APK réel | Transmis |
 | 2026-10-26 | IMP-06 | feat | NIKIEMA Abdoul Fatahou | NIKIEMA Abdoul Fatahou / NONGUIERMA WENDINSOO LEONEL | `feat/IMP-06-seuils-arcep` | `fb917ba` | Référentiel v3 + 3 routes `/api/arcep/*` : `go build`/`vet`/`test` verts, 7 tests `results`, démarrage « 10 zones chargées depuis config/seuils.json » ; handlers rejoués par la revue du 27/10 sur une base MongoDB jetable locale (71/71 assertions : jointure villes -> zones -> seuils, bloc QoS) | Transmis |
 
 ## Nomenclature V14 vs V11 vs V4 (à lire avant de citer un Sous-ID)
@@ -35,7 +33,7 @@ mise en place du garde-fou, dont les commits ne respectent pas encore le §2.
 | ISS-09 | `1a889e3` | APK (GPS off) | Validé |
 | ISS-12 | `709dd26` | Chrome + APK | Validé |
 
-## Suivi des 27 items V14 (une ligne par Sous-ID — référence du garde-fou §5)
+## Suivi des 27 items V14 (tableau d'avancement — **ne vaut pas preuve de contribution**, §5)
 
 | Sous-ID | Intitulé (V14) | Owner (classeur) | Statut classeur |
 |---|---|---|---|
