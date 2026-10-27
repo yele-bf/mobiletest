@@ -1,0 +1,19 @@
+# Changelog
+
+Format : [Keep a Changelog 1.1.0](https://keepachangelog.com/fr/1.1.0/), une
+version par vague (CONTRIBUTING §3).
+
+## [Non publiée]
+
+### Ajouté
+
+- IMP-06 : référentiel ARCEP version 3 (`config/seuils.json`, zones, profils
+  D1–D4, seuils QoS navigation et streaming) rétabli sur `main` depuis la
+  branche `fix/ARCEP-routes` (commit `cd1556b`), avec son module de
+  comparaison (`results/arcep.go`) et l'agrégation par ville
+  (`database/mongodb/arcep.go`).
+- IMP-06 : endpoints `GET /api/arcep/comparison`, `GET /api/arcep/measure` et
+  `POST /api/arcep/measure/batch`, branchés en chi comme les routes dashboard.
+- IMP-06 : validation du bloc « qos » au démarrage (`results/arcep_qos.go`) et
+  tests du référentiel livré (`results/arcep_referentiel_test.go`) — un seuil
+  nul, un profil inconnu ou un bloc `qos` absent font échouer le chargement.

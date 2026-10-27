@@ -22,6 +22,10 @@ func main() {
 	conf := config.Load(*optConfig)
 	web.SetServerLocation(&conf)
 	results.Initialize(&conf)
+	// Référentiel ARCEP (IMP-06) : lu une fois au démarrage ; en cas de
+	// fichier absent ou invalide, les routes /api/arcep répondent une erreur
+	// explicite au lieu de servir des seuils inventés.
+	results.LoadArcepConfig("config/seuils.json")
 	database.SetDBInfo(&conf)
 	log.Fatal(web.ListenAndServe(&conf))
 }
