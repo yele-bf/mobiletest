@@ -17,3 +17,12 @@ version par vague (CONTRIBUTING §3).
 - IMP-06 : validation du bloc « qos » au démarrage (`results/arcep_qos.go`) et
   tests du référentiel livré (`results/arcep_referentiel_test.go`) — un seuil
   nul, un profil inconnu ou un bloc `qos` absent font échouer le chargement.
+
+### Corrigé
+
+- Garde-fou : le contrôle « le Sous-ID a une ligne au registre » ne porte plus que
+  sur le **sujet** du commit (une PR de documentation qui nomme un Sous-ID dans
+  le corps n'est plus refusée à tort), et les deux lignes d'exemple datées du
+  registre sont retirées — elles satisfaisaient ce contrôle pour `IMP-11` et
+  `ISS-12`. Règle écrite au CONTRIBUTING §5.
+
