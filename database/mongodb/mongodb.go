@@ -68,6 +68,10 @@ type Document struct {
 	BrowsingSuccessRate float64 `bson:"browsing_success_rate" json:"browsingSuccessRate"`
 	BrowsingPagesTested int     `bson:"browsing_pages_tested" json:"browsingPagesTested"`
 	BrowsingScore       float64 `bson:"browsing_score"        json:"browsingScore"`
+	// Detailed metrics, nPerf style (zero = not measured, older app version)
+	DownloadPeakSpeed float64 `bson:"download_peak_speed" json:"downloadPeakSpeed"`
+	UploadPeakSpeed   float64 `bson:"upload_peak_speed"   json:"uploadPeakSpeed"`
+	PingMin           float64 `bson:"ping_min"            json:"pingMin"`
 	// Mesure passive (collecte de couverture en arrière-plan).
 	// MeasurementType vaut "active" pour un test lancé par l'utilisateur et
 	// "passive" pour une relève automatique sans speedtest. Vide pour les
@@ -109,6 +113,10 @@ type mobileExtra struct {
 	BrowsingSuccessRate float64 `json:"browsingSuccessRate"`
 	BrowsingPagesTested int     `json:"browsingPagesTested"`
 	BrowsingScore       float64 `json:"browsingScore"`
+	// Detailed metrics, nPerf style (0 = not measured, older app version)
+	DownloadPeakSpeed float64 `json:"downloadPeakSpeed"`
+	UploadPeakSpeed   float64 `json:"uploadPeakSpeed"`
+	PingMin           float64 `json:"pingMin"`
 	// Collecte passive de couverture : "active" (test utilisateur) ou
 	// "passive" (relève automatique, sans mesure de débit).
 	Type        string `json:"type"`
@@ -800,6 +808,9 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 			doc.BrowsingSuccessRate = extra.BrowsingSuccessRate
 			doc.BrowsingPagesTested = extra.BrowsingPagesTested
 			doc.BrowsingScore = extra.BrowsingScore
+			doc.DownloadPeakSpeed = extra.DownloadPeakSpeed
+			doc.UploadPeakSpeed = extra.UploadPeakSpeed
+			doc.PingMin = extra.PingMin
 			doc.SignalDbm = extra.SignalDbm
 			doc.SignalLevel = extra.SignalLevel
 			doc.PacketLoss = validPacketLoss(extra.PacketLoss)

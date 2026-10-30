@@ -11,6 +11,8 @@
 | 2026-10-30 | IMP-07 | feat | SANOU Zossoun Aristide Daouda | SANOU Zossoun Aristide Daouda / TRAORE Oumou Kal / Ilboudo Wendpagnagdé Elsa Fleur | `imp/IMP-07-perte-paquets` | _après merge_ | Test Go `TestToDocumentPacketLoss` (0 % conservé, absente ou hors bornes = non mesurée) ; `go build`/`vet`/`test` par la CI | En cours |
 | 2026-10-30 | IMP-03 | feat | SANOU Zossoun Aristide Daouda | SANOU Zossoun Aristide Daouda / SANNA Abdoul Salam | `imp/IMP-03-comptes` | _après merge_ | Tests Go (`TestHashPasswordDeterministicPerSalt`, `TestTokenHashHidesToken`, `TestNormalizeEmail`, `TestRateLimiter`, `TestValidEmail`, `TestBearerToken`) ; `go build`/`vet`/`test` par la CI ; parcours register/login/me/results à rejouer sur une base locale | En cours |
 
+| 2026-10-30 | ISS-06 | fix | Wangraoua Aicha Bénédicte Flore Myriam | Wangraoua Aicha Bénédicte Flore Myriam | `iss/ISS-06-min-moy-max-debit-latence-backend` | `1889f18` | Tests Go locaux : parsing des métriques min/max dans extra, persistance MongoDB, API dashboard renvoie les valeurs | En cours |
+
 ## Nomenclature V14 vs V11 vs V4 (à lire avant de citer un Sous-ID)
 
 - **V14 (19/10/2026) = V11 + IMP-14** (conditions d'utilisation au premier lancement, P3, `mobilefront`) **+ IMP-15** (prévision de la qualité réseau, P1, `New_web`) : 27 items.

@@ -26,7 +26,8 @@ redact_ip_addresses=false
 database_type="mongodb"
 
 # MongoDB Atlas connection string (used when database_type="mongodb")
-# Set via environment variable SPEEDTEST_DATABASE_CONNECTION_STRING on Render
+# Ne JAMAIS ecrire de valeur ici : le depot est public. La chaine se transmet
+# par la variable SPEEDTEST_DATABASE_CONNECTION_STRING (voir render.yaml, `sync: false`).
 database_connection_string=""
 
 # MongoDB database name (default: yele_speedtest)
