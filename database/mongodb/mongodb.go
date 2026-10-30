@@ -49,6 +49,9 @@ type Document struct {
 	// IMP-13 : UUID d'appareil anonyme et stable, généré par l'app. Permet le
 	// suivi longitudinal des mesures par appareil sans aucune donnée privée.
 	DeviceID    string  `bson:"device_id"    json:"deviceId"`
+	// IMP-03 : identifiant du compte connecté, vide si le test est anonyme.
+	// Jamais renvoyé par l'API (json:"-").
+	UserID string `bson:"user_id,omitempty" json:"-"`
 	Location    string  `bson:"location"     json:"location"`
 	Latitude    float64 `bson:"latitude"     json:"latitude"`
 	Longitude   float64 `bson:"longitude"    json:"longitude"`
@@ -226,7 +229,12 @@ func Open(uri, dbName string) *MongoDB {
 	}
 
 	log.Infof("Connected to MongoDB Atlas, database: %s", dbName)
-	return &MongoDB{client: client, collection: coll}
+	m := &MongoDB{client: client, collection: coll}
+	// IMP-03 : e-mail unique et purge automatique des sessions expirées.
+	if err := m.EnsureAccountIndexes(); err != nil {
+		log.Warnf("MongoDB account index warning: %s", err)
+	}
+	return m
 }
 
 // ── DataAccess interface ──────────────────────────────────────────────────────
@@ -765,6 +773,7 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 		UserAgent: data.UserAgent,
 		Language:  data.Language,
 		Log:       data.Log,
+		UserID:    data.UserID,
 	}
 
 	// Parse mobile extra JSON
