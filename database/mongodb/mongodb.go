@@ -676,6 +676,16 @@ type BarometerResult struct {
 	PingPercentile     float64       `json:"pingPercentile"`
 	SampleSize         int64         `json:"sampleSize"`
 	Operators          []OperatorStat `json:"operators"`
+	// IMP-09 : moyenne nationale et comparaison aux seuls clients de
+	// l'opérateur du testeur (paramètre `operator`). Les champs Operator*
+	// sont omis si l'opérateur n'est pas fourni.
+	NationalAvgDownload        float64 `json:"nationalAvgDownload"`
+	Operator                   string  `json:"operator,omitempty"`
+	OperatorSampleSize         int64   `json:"operatorSampleSize,omitempty"`
+	OperatorAvgDownload        float64 `json:"operatorAvgDownload,omitempty"`
+	OperatorDownloadPercentile float64 `json:"operatorDownloadPercentile,omitempty"`
+	OperatorUploadPercentile   float64 `json:"operatorUploadPercentile,omitempty"`
+	OperatorPingPercentile     float64 `json:"operatorPingPercentile,omitempty"`
 }
 
 // FetchBarometer calcule la position relative d'un résultat (débits en Mb/s,
@@ -689,7 +699,10 @@ type BarometerResult struct {
 // sur un échantillon des 5000 dernières mesures actives abouties : c'est
 // largement suffisant pour un baromètre grand public et cela évite un
 // pipeline d'agrégation complexe difficile à tester.
-func (m *MongoDB) FetchBarometer(download, upload, ping float64) (*BarometerResult, error) {
+//
+// IMP-09 : si [operator] est fourni, le résultat est aussi situé parmi les
+// seules mesures du même opérateur (voir barometerFrom).
+func (m *MongoDB) FetchBarometer(download, upload, ping float64, operator string) (*BarometerResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -697,7 +710,7 @@ func (m *MongoDB) FetchBarometer(download, upload, ping float64) (*BarometerResu
 	opts := options.Find().
 		SetSort(bson.D{{Key: "timestamp", Value: -1}}).
 		SetLimit(5000).
-		SetProjection(bson.M{"dl": 1, "ul": 1, "ping": 1})
+		SetProjection(bson.M{"dl": 1, "ul": 1, "ping": 1, "operator": 1, "sim_operator": 1})
 	cursor, err := m.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -709,29 +722,7 @@ func (m *MongoDB) FetchBarometer(download, upload, ping float64) (*BarometerResu
 		return nil, err
 	}
 
-	dlBetter, ulBetter, pingBetter := 0, 0, 0
-	for _, d := range docs {
-		dl, _ := strconv.ParseFloat(d.Download, 64)
-		ul, _ := strconv.ParseFloat(d.Upload, 64)
-		pg, _ := strconv.ParseFloat(d.Ping, 64)
-		if dl < download {
-			dlBetter++
-		}
-		if ul < upload {
-			ulBetter++
-		}
-		if pg > ping {
-			pingBetter++
-		}
-	}
-
-	n := float64(len(docs))
-	res := &BarometerResult{SampleSize: int64(len(docs))}
-	if n > 0 {
-		res.DownloadPercentile = round2(float64(dlBetter) / n * 100)
-		res.UploadPercentile = round2(float64(ulBetter) / n * 100)
-		res.PingPercentile = round2(float64(pingBetter) / n * 100)
-	}
+	res := barometerFrom(docs, download, upload, ping, operator)
 
 	// Classement des opérateurs, réutilise l'agrégation existante (déjà triée
 	// par nombre de tests ; on la re-trie par débit moyen ici).

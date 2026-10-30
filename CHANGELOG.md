@@ -7,6 +7,7 @@ version par vague (CONTRIBUTING §3).
 
 ### Ajouté
 
+- IMP-09 : `/api/dashboard/barometer` accepte `operator` et renvoie, en plus des centiles nationaux, `nationalAvgDownload` et la comparaison parmi les clients de cet opérateur (`operator`, `operatorSampleSize`, `operatorDownloadPercentile`, `operatorUploadPercentile`, `operatorPingPercentile`, `operatorAvgDownload`, à partir de 5 mesures). Libellés unifiés (`operatorFamily` : « Orange BF », « Orange Burkina Faso », « 61302 » → « Orange »). Calcul isolé dans `barometerFrom` et testé.
 - IMP-06 : référentiel ARCEP version 3 (`config/seuils.json`, zones, profils
   D1–D4, seuils QoS navigation et streaming) rétabli sur `main` depuis la
   branche `fix/ARCEP-routes` (commit `cd1556b`), avec son module de

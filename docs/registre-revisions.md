@@ -7,6 +7,7 @@
 | Date | Sous-ID (V14) | Type | Agent | Owner (classeur) | Branche / PR | Commit | Validation | Statut |
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-26 | IMP-06 | feat | NIKIEMA Abdoul Fatahou | NIKIEMA Abdoul Fatahou / NONGUIERMA WENDINSOO LEONEL | `feat/IMP-06-seuils-arcep` | `fb917ba` | Référentiel v3 + 3 routes `/api/arcep/*` : `go build`/`vet`/`test` verts, 7 tests `results`, démarrage « 10 zones chargées depuis config/seuils.json » ; handlers rejoués par la revue du 27/10 sur une base MongoDB jetable locale (71/71 assertions : jointure villes -> zones -> seuils, bloc QoS) | Transmis |
+| 2026-10-30 | IMP-09 | feat | SANOU Zossoun Aristide Daouda | SANOU Zossoun Aristide Daouda / SANNA Abdoul Salam | `imp/IMP-09-barometre-operateur` | _après merge_ | Tests Go `TestBarometerFromParOperateur`, `TestBarometerFromSansComparaisonOperateur`, `TestOperatorFamily` (10 mesures, 4 opérateurs, libellés hétérogènes) ; `go build`/`vet`/`test` par la CI | En cours |
 
 ## Nomenclature V14 vs V11 vs V4 (à lire avant de citer un Sous-ID)
 
