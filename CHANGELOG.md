@@ -7,6 +7,7 @@ version par vague (CONTRIBUTING §3).
 
 ### Ajouté
 
+- IMP-07 : perte de paquets (`packetLoss`, %) lue dans `extra`, stockée (`packet_loss`) et renvoyée par `/api/dashboard/map`. Absente ou hors de 0–100 % : non mesurée (`null`), jamais confondue avec 0 %.
 - IMP-06 : référentiel ARCEP version 3 (`config/seuils.json`, zones, profils
   D1–D4, seuils QoS navigation et streaming) rétabli sur `main` depuis la
   branche `fix/ARCEP-routes` (commit `cd1556b`), avec son module de
