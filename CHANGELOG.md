@@ -7,6 +7,7 @@ version par vague (CONTRIBUTING §3).
 
 ### Ajouté
 
+- IMP-09 : `/api/dashboard/barometer` accepte `operator` et renvoie, en plus des centiles nationaux, `nationalAvgDownload` et la comparaison parmi les clients de cet opérateur (`operator`, `operatorSampleSize`, `operatorDownloadPercentile`, `operatorUploadPercentile`, `operatorPingPercentile`, `operatorAvgDownload`, à partir de 5 mesures). Libellés unifiés (`operatorFamily` : « Orange BF », « Orange Burkina Faso », « 61302 » → « Orange »). Calcul isolé dans `barometerFrom` et testé.
 - IMP-07 : perte de paquets (`packetLoss`, %) lue dans `extra`, stockée (`packet_loss`) et renvoyée par `/api/dashboard/map`. Absente ou hors de 0–100 % : non mesurée (`null`), jamais confondue avec 0 %.
 - IMP-03 : comptes utilisateurs. `POST /api/auth/register`, `/api/auth/login`, `/api/auth/logout` ; `GET`/`PUT`/`DELETE /api/me` ; `GET /api/me/results` (mesures du seul compte). Mots de passe PBKDF2-SHA256 (600 000 itérations, sel par compte) ; sessions par jeton aléatoire dont seule l'empreinte SHA-256 est stockée, expirées après 90 jours (index TTL) ; 20 tentatives par IP et par 10 minutes. Un test envoyé avec `Authorization: Bearer` est rattaché au compte (`user_id`, jamais renvoyé par l'API) ; supprimer un compte rend ses mesures anonymes.
 - IMP-06 : référentiel ARCEP version 3 (`config/seuils.json`, zones, profils
