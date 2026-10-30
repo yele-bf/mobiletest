@@ -65,6 +65,15 @@ type Document struct {
 	BrowsingSuccessRate float64 `bson:"browsing_success_rate" json:"browsingSuccessRate"`
 	BrowsingPagesTested int     `bson:"browsing_pages_tested" json:"browsingPagesTested"`
 	BrowsingScore       float64 `bson:"browsing_score"        json:"browsingScore"`
+	// ISS-06 : min / max des débits (Mb/s) et de la latence (ms) pendant le
+	// test ; la moyenne reste dl / ul / ping. nil = non mesurés (ancienne
+	// version de l'app, test web, relève passive).
+	DownloadMin *float64 `bson:"download_min,omitempty" json:"downloadMin,omitempty"`
+	DownloadMax *float64 `bson:"download_max,omitempty" json:"downloadMax,omitempty"`
+	UploadMin   *float64 `bson:"upload_min,omitempty"   json:"uploadMin,omitempty"`
+	UploadMax   *float64 `bson:"upload_max,omitempty"   json:"uploadMax,omitempty"`
+	PingMin     *float64 `bson:"ping_min,omitempty"     json:"pingMin,omitempty"`
+	PingMax     *float64 `bson:"ping_max,omitempty"     json:"pingMax,omitempty"`
 	// Mesure passive (collecte de couverture en arrière-plan).
 	// MeasurementType vaut "active" pour un test lancé par l'utilisateur et
 	// "passive" pour une relève automatique sans speedtest. Vide pour les
@@ -102,6 +111,13 @@ type mobileExtra struct {
 	BrowsingSuccessRate float64 `json:"browsingSuccessRate"`
 	BrowsingPagesTested int     `json:"browsingPagesTested"`
 	BrowsingScore       float64 `json:"browsingScore"`
+	// ISS-06 : min / max, absents si non mesurés.
+	DownloadMin *float64 `json:"downloadMin"`
+	DownloadMax *float64 `json:"downloadMax"`
+	UploadMin   *float64 `json:"uploadMin"`
+	UploadMax   *float64 `json:"uploadMax"`
+	PingMin     *float64 `json:"pingMin"`
+	PingMax     *float64 `json:"pingMax"`
 	// Collecte passive de couverture : "active" (test utilisateur) ou
 	// "passive" (relève automatique, sans mesure de débit).
 	Type        string `json:"type"`
@@ -791,6 +807,9 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 			doc.BrowsingSuccessRate = extra.BrowsingSuccessRate
 			doc.BrowsingPagesTested = extra.BrowsingPagesTested
 			doc.BrowsingScore = extra.BrowsingScore
+			doc.DownloadMin, doc.DownloadMax = validMinMax(extra.DownloadMin, extra.DownloadMax)
+			doc.UploadMin, doc.UploadMax = validMinMax(extra.UploadMin, extra.UploadMax)
+			doc.PingMin, doc.PingMax = validMinMax(extra.PingMin, extra.PingMax)
 			doc.SignalDbm = extra.SignalDbm
 			doc.SignalLevel = extra.SignalLevel
 			// Un `extra` sans type explicite provient d'une version antérieure

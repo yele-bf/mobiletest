@@ -20,6 +20,7 @@ version par vague (CONTRIBUTING §3).
 
 ### Corrigé
 
+- ISS-06 : min / max des débits et de la latence (`downloadMin`, `downloadMax`, `uploadMin`, `uploadMax`, `pingMin`, `pingMax`) lus dans `extra` et stockés. Un couple incomplet, inversé ou négatif est traité comme non mesuré.
 - Garde-fou : le contrôle « le Sous-ID a une ligne au registre » ne porte plus que
   sur le **sujet** du commit (une PR de documentation qui nomme un Sous-ID dans
   le corps n'est plus refusée à tort), et les deux lignes d'exemple datées du
