@@ -46,7 +46,7 @@ func ListenAndServe(conf *config.Config) error {
 
 	cs := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "OPTIONS", "HEAD"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
 		AllowedHeaders: []string{"*"},
 	})
 
@@ -93,6 +93,13 @@ func ListenAndServe(conf *config.Config) error {
 	r.Get(conf.BaseURL+"/api/dashboard/heatmap", results.DashboardHeatmap)
 	r.Get(conf.BaseURL+"/api/dashboard/stats/advanced", results.DashboardAdvancedStats)
 	r.Get(conf.BaseURL+"/api/dashboard/barometer", results.BarometerHandler)
+
+	// Comptes utilisateurs (IMP-03)
+	r.Post(conf.BaseURL+"/api/auth/register", results.Register)
+	r.Post(conf.BaseURL+"/api/auth/login", results.Login)
+	r.Post(conf.BaseURL+"/api/auth/logout", results.Logout)
+	r.HandleFunc(conf.BaseURL+"/api/me", results.Me)
+	r.Get(conf.BaseURL+"/api/me/results", results.MyResults)
 
 	// Comparaison ARCEP (IMP-06) : seuils lus depuis config/seuils.json.
 	r.Get(conf.BaseURL+"/api/arcep/comparison", results.ArcepComparison)
