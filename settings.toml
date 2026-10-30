@@ -27,7 +27,7 @@ database_type="mongodb"
 
 # MongoDB Atlas connection string (used when database_type="mongodb")
 # Set via environment variable SPEEDTEST_DATABASE_CONNECTION_STRING on Render
-database_connection_string=""
+database_connection_string="mongodb+srv://yele_app:Urgence2023@yele.pnwsjo5.mongodb.net/?appName=yele"
 
 # MongoDB database name (default: yele_speedtest)
 database_name="yele_speedtest"
