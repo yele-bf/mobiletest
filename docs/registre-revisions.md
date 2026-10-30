@@ -7,6 +7,7 @@
 | Date | Sous-ID (V14) | Type | Agent | Owner (classeur) | Branche / PR | Commit | Validation | Statut |
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-26 | IMP-06 | feat | NIKIEMA Abdoul Fatahou | NIKIEMA Abdoul Fatahou / NONGUIERMA WENDINSOO LEONEL | `feat/IMP-06-seuils-arcep` | `fb917ba` | Référentiel v3 + 3 routes `/api/arcep/*` : `go build`/`vet`/`test` verts, 7 tests `results`, démarrage « 10 zones chargées depuis config/seuils.json » ; handlers rejoués par la revue du 27/10 sur une base MongoDB jetable locale (71/71 assertions : jointure villes -> zones -> seuils, bloc QoS) | Transmis |
+| 2026-10-30 | IMP-07 | feat | SANOU Zossoun Aristide Daouda | SANOU Zossoun Aristide Daouda / TRAORE Oumou Kal / Ilboudo Wendpagnagdé Elsa Fleur | `imp/IMP-07-perte-paquets` | _après merge_ | Test Go `TestToDocumentPacketLoss` (0 % conservé, absente ou hors bornes = non mesurée) ; `go build`/`vet`/`test` par la CI | En cours |
 | 2026-10-30 | IMP-03 | feat | SANOU Zossoun Aristide Daouda | SANOU Zossoun Aristide Daouda / SANNA Abdoul Salam | `imp/IMP-03-comptes` | _après merge_ | Tests Go (`TestHashPasswordDeterministicPerSalt`, `TestTokenHashHidesToken`, `TestNormalizeEmail`, `TestRateLimiter`, `TestValidEmail`, `TestBearerToken`) ; `go build`/`vet`/`test` par la CI ; parcours register/login/me/results à rejouer sur une base locale | En cours |
 
 ## Nomenclature V14 vs V11 vs V4 (à lire avant de citer un Sous-ID)

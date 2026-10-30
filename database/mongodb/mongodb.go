@@ -76,6 +76,10 @@ type Document struct {
 	MeasurementType string `bson:"measurement_type" json:"measurementType"`
 	SignalDbm       int    `bson:"signal_dbm"       json:"signalDbm"`
 	SignalLevel     int    `bson:"signal_level"     json:"signalLevel"`
+	// IMP-07 : perte de paquets vers le serveur de test, en %. nil = non
+	// mesurée (ancienne version de l'app, test web, relève passive) ; 0 est
+	// une valeur légitime (aucun paquet perdu).
+	PacketLoss *float64 `bson:"packet_loss,omitempty" json:"packetLoss,omitempty"`
 	// From ISPInfo
 	City    string `bson:"city"    json:"city"`
 	Country string `bson:"country" json:"country"`
@@ -110,6 +114,8 @@ type mobileExtra struct {
 	Type        string `json:"type"`
 	SignalDbm   int    `json:"signalDbm"`
 	SignalLevel int    `json:"signalLevel"`
+	// IMP-07 : perte de paquets en %, absente si non mesurée.
+	PacketLoss *float64 `json:"packetLoss"`
 }
 
 // ispInfo matches the real shape stored in the isp_info field:
@@ -165,6 +171,8 @@ type MapPoint struct {
 	StreamingRebufferRatio float64 `json:"streamingRebufferRatio"`
 	BrowsingAvgLoadMs      float64 `json:"browsingAvgLoadMs"`
 	BrowsingScore          float64 `json:"browsingScore"`
+	// IMP-07 : perte de paquets en %, null si non mesurée.
+	PacketLoss *float64 `json:"packetLoss"`
 }
 
 type HeatPoint struct {
@@ -523,6 +531,7 @@ func (m *MongoDB) FetchMapPoints() ([]MapPoint, error) {
 			StreamingRebufferRatio: round2(doc.StreamingRebufferRatio),
 			BrowsingAvgLoadMs:      round2(doc.BrowsingAvgLoadMs),
 			BrowsingScore:          round2(doc.BrowsingScore),
+			PacketLoss:             doc.PacketLoss,
 		})
 	}
 	return points, nil
@@ -802,6 +811,7 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 			doc.BrowsingScore = extra.BrowsingScore
 			doc.SignalDbm = extra.SignalDbm
 			doc.SignalLevel = extra.SignalLevel
+			doc.PacketLoss = validPacketLoss(extra.PacketLoss)
 			// Un `extra` sans type explicite provient d'une version antérieure
 			// de l'application mobile : c'était nécessairement un test actif.
 			doc.MeasurementType = extra.Type
@@ -906,4 +916,15 @@ func toDoubleSafe(field string) bson.D {
 		{Key: "onError", Value: 0},
 		{Key: "onNull", Value: 0},
 	}}}
+}
+
+// validPacketLoss garde une perte de paquets plausible (0 à 100 %) et rejette
+// le reste comme « non mesurée » (IMP-07) : une valeur hors bornes viendrait
+// d'un client défectueux et fausserait les moyennes.
+func validPacketLoss(v *float64) *float64 {
+	if v == nil || *v < 0 || *v > 100 {
+		return nil
+	}
+	r := round2(*v)
+	return &r
 }

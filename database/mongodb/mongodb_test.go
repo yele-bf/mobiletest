@@ -88,3 +88,32 @@ func TestToDocumentWithoutNewFields(t *testing.T) {
 		t.Errorf("Operator = %q, attendu Moov Africa", doc.Operator)
 	}
 }
+
+// IMP-07 : la perte de paquets est conservée, y compris 0 % ; absente ou hors
+// bornes, elle reste « non mesurée » (nil) au lieu de valoir 0.
+func TestToDocumentPacketLoss(t *testing.T) {
+	m := &MongoDB{}
+	cases := []struct {
+		name  string
+		extra string
+		want  *float64
+	}{
+		{"absente", `{"type":"active"}`, nil},
+		{"nulle", `{"type":"active","packetLoss":0}`, ptr(0)},
+		{"partielle", `{"type":"active","packetLoss":2.456}`, ptr(2.46)},
+		{"totale", `{"type":"active","packetLoss":100}`, ptr(100)},
+		{"négative", `{"type":"active","packetLoss":-1}`, nil},
+		{"au-delà de 100", `{"type":"active","packetLoss":140}`, nil},
+	}
+	for _, c := range cases {
+		doc := m.toDocument(&schema.TelemetryData{Extra: c.extra})
+		switch {
+		case c.want == nil && doc.PacketLoss != nil:
+			t.Errorf("%s : perte %v, attendu non mesurée", c.name, *doc.PacketLoss)
+		case c.want != nil && (doc.PacketLoss == nil || *doc.PacketLoss != *c.want):
+			t.Errorf("%s : perte %v, attendu %v", c.name, doc.PacketLoss, *c.want)
+		}
+	}
+}
+
+func ptr(v float64) *float64 { return &v }
