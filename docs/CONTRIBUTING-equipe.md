@@ -206,6 +206,11 @@ Un item passe **Validé** que si les 4 conditions sont réunies :
 - Aucun secret dans le dépôt ni dans les URLs `remote` ; `.env` ignoré.
 - Variables d'API backend en *Settings → Secrets and variables → Actions*.
 - Le dashboard `config.js` ne contient que des URLs publiques.
+- Contrôle automatique : `scripts/ci/yele_secrets_guard.py`, exécuté par la PR
+  (`yele-guard`). Il refuse toute chaîne de connexion, clé ou jeton ajouté en clair.
+- Un secret déjà fusionné ne disparaît pas du fichier : il reste dans l'historique.
+  Le retirer ne suffit pas, il faut **faire tourner le secret** (supprimer le compte
+  ou changer son mot de passe).
 
 ## 8. Vagues (release trains)
 

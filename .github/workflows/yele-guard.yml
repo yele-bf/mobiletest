@@ -24,3 +24,9 @@ jobs:
           python3 scripts/ci/yele_guard.py \
             "${{ github.event.pull_request.base.sha }}" \
             "${{ github.event.pull_request.head.sha }}"
+
+      - name: Refuser un secret en clair dans la PR
+        run: |
+          python3 scripts/ci/yele_secrets_guard.py \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}"
