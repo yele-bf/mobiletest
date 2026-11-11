@@ -65,6 +65,15 @@ type Document struct {
 	BrowsingSuccessRate float64 `bson:"browsing_success_rate" json:"browsingSuccessRate"`
 	BrowsingPagesTested int     `bson:"browsing_pages_tested" json:"browsingPagesTested"`
 	BrowsingScore       float64 `bson:"browsing_score"        json:"browsingScore"`
+	// IMP-12 : score global ouvert YELE (yele-open-1.0.0)
+	ScoringVersion   string  `bson:"scoring_version"    json:"scoringVersion"`
+	ScoreDownload    float64 `bson:"score_download"     json:"scoreDownload"`
+	ScoreUpload      float64 `bson:"score_upload"       json:"scoreUpload"`
+	ScorePingJitter  float64 `bson:"score_ping_jitter"  json:"scorePingJitter"`
+	ScoreBrowsing    float64 `bson:"score_browsing"      json:"scoreBrowsing"`
+	ScoreStreaming   float64 `bson:"score_streaming"     json:"scoreStreaming"`
+	ScoreGlobal      float64 `bson:"score_global"       json:"scoreGlobal"`
+	ScoringStatuses  string  `bson:"scoring_statuses"   json:"scoringStatuses"`
 	// Mesure passive (collecte de couverture en arrière-plan).
 	// MeasurementType vaut "active" pour un test lancé par l'utilisateur et
 	// "passive" pour une relève automatique sans speedtest. Vide pour les
@@ -102,6 +111,15 @@ type mobileExtra struct {
 	BrowsingSuccessRate float64 `json:"browsingSuccessRate"`
 	BrowsingPagesTested int     `json:"browsingPagesTested"`
 	BrowsingScore       float64 `json:"browsingScore"`
+	// IMP-12 : score global ouvert YELE
+	ScoringVersion  string  `json:"scoringVersion"`
+	ScoreDownload   float64 `json:"scoreDownload"`
+	ScoreUpload     float64 `json:"scoreUpload"`
+	ScorePingJitter float64 `json:"scorePingJitter"`
+	ScoreBrowsing   float64 `json:"scoreBrowsing"`
+	ScoreStreaming  float64 `json:"scoreStreaming"`
+	ScoreGlobal     float64 `json:"scoreGlobal"`
+	ScoringStatuses string  `json:"scoringStatuses"`
 	// Collecte passive de couverture : "active" (test utilisateur) ou
 	// "passive" (relève automatique, sans mesure de débit).
 	Type        string `json:"type"`
@@ -162,6 +180,15 @@ type MapPoint struct {
 	StreamingRebufferRatio float64 `json:"streamingRebufferRatio"`
 	BrowsingAvgLoadMs      float64 `json:"browsingAvgLoadMs"`
 	BrowsingScore          float64 `json:"browsingScore"`
+	// IMP-12 : score global ouvert YELE
+	ScoringVersion  string  `json:"scoringVersion"`
+	ScoreDownload   float64 `json:"scoreDownload"`
+	ScoreUpload     float64 `json:"scoreUpload"`
+	ScorePingJitter float64 `json:"scorePingJitter"`
+	ScoreBrowsing   float64 `json:"scoreBrowsing"`
+	ScoreStreaming  float64 `json:"scoreStreaming"`
+	ScoreGlobal     float64 `json:"scoreGlobal"`
+	ScoringStatuses string  `json:"scoringStatuses"`
 }
 
 type HeatPoint struct {
@@ -515,6 +542,14 @@ func (m *MongoDB) FetchMapPoints() ([]MapPoint, error) {
 			StreamingRebufferRatio: round2(doc.StreamingRebufferRatio),
 			BrowsingAvgLoadMs:      round2(doc.BrowsingAvgLoadMs),
 			BrowsingScore:          round2(doc.BrowsingScore),
+			ScoringVersion:         doc.ScoringVersion,
+			ScoreDownload:          round2(doc.ScoreDownload),
+			ScoreUpload:            round2(doc.ScoreUpload),
+			ScorePingJitter:        round2(doc.ScorePingJitter),
+			ScoreBrowsing:          round2(doc.ScoreBrowsing),
+			ScoreStreaming:         round2(doc.ScoreStreaming),
+			ScoreGlobal:            round2(doc.ScoreGlobal),
+			ScoringStatuses:        doc.ScoringStatuses,
 		})
 	}
 	return points, nil
@@ -786,13 +821,20 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 			doc.StreamingRebufferCount = extra.StreamingRebufferCount
 			doc.StreamingRebufferRatio = extra.StreamingRebufferRatio
 			doc.StreamingMaxResolution = extra.StreamingMaxResolution
-			doc.StreamingScore = extra.StreamingScore
-			doc.BrowsingAvgLoadMs = extra.BrowsingAvgLoadMs
-			doc.BrowsingSuccessRate = extra.BrowsingSuccessRate
-			doc.BrowsingPagesTested = extra.BrowsingPagesTested
-			doc.BrowsingScore = extra.BrowsingScore
-			doc.SignalDbm = extra.SignalDbm
-			doc.SignalLevel = extra.SignalLevel
+			doc.StreamingScore = extra.StreamingScore		doc.BrowsingAvgLoadMs = extra.BrowsingAvgLoadMs
+		doc.BrowsingSuccessRate = extra.BrowsingSuccessRate
+		doc.BrowsingPagesTested = extra.BrowsingPagesTested
+		doc.BrowsingScore = extra.BrowsingScore
+		doc.ScoringVersion = extra.ScoringVersion
+		doc.ScoreDownload = extra.ScoreDownload
+		doc.ScoreUpload = extra.ScoreUpload
+		doc.ScorePingJitter = extra.ScorePingJitter
+		doc.ScoreBrowsing = extra.ScoreBrowsing
+		doc.ScoreStreaming = extra.ScoreStreaming
+		doc.ScoreGlobal = extra.ScoreGlobal
+		doc.ScoringStatuses = extra.ScoringStatuses
+		doc.SignalDbm = extra.SignalDbm
+		doc.SignalLevel = extra.SignalLevel
 			// Un `extra` sans type explicite provient d'une version antérieure
 			// de l'application mobile : c'était nécessairement un test actif.
 			doc.MeasurementType = extra.Type

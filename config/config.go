@@ -48,6 +48,8 @@ var (
 )
 
 func init() {
+	viper.SetEnvPrefix("speedtest")
+
 	viper.SetDefault("listen_port", "8989")
 	viper.SetDefault("url_base", "")
 	viper.SetDefault("proxyprotocol_port", "0")
@@ -80,7 +82,6 @@ func Load(configPath string) Config {
 
 	configFile = configPath
 	viper.SetConfigFile(configPath)
-	viper.SetEnvPrefix("speedtest")
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
 
