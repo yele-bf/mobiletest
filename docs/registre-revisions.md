@@ -13,7 +13,7 @@
 
 | 2026-10-30 | ISS-06 | fix | Wangraoua Aicha Bénédicte Flore Myriam | Wangraoua Aicha Bénédicte Flore Myriam | `iss/ISS-06-min-moy-max-debit-latence-backend` | `1889f18` | Tests Go locaux : parsing des métriques min/max dans extra, persistance MongoDB, API dashboard renvoie les valeurs | En cours |
 
-| 2026-11-11 | ISS-01 | feat | KikaiNoKami | SAWADOGO Hassan Achraf Ammar | `feat/signal-dashboard` | _après merge_ | `go build`/`vet` verts ; API `/api/dashboard/results` et `/api/dashboard/map` renvoient rsrp/rsrq (4G puis repli 5G SA) et rssi (WiFi), nil = non mesuré ; `/summary` ajoute geolocatedTests (même filtre que la carte) ; vérification terrain 4G/5G à rejouer sur l'APK (validation classeur = APK réel) | En cours |
+| 2026-11-11 | ISS-01 | feat | KikaiNoKami | SAWADOGO Hassan Achraf Ammar | `feat/signal-dashboard` | `b9e0edb` | `go build`/`vet` verts ; API `/api/dashboard/results` et `/api/dashboard/map` renvoient rsrp/rsrq (4G puis repli 5G SA) et rssi (WiFi), nil = non mesuré ; `/summary` ajoute geolocatedTests (même filtre que la carte) ; vérification terrain 4G/5G à rejouer sur l'APK (validation classeur = APK réel) | En cours |
 
 ## Nomenclature V14 vs V11 vs V4 (à lire avant de citer un Sous-ID)
 
