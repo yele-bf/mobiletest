@@ -80,6 +80,21 @@ type Document struct {
 	MeasurementType string `bson:"measurement_type" json:"measurementType"`
 	SignalDbm       int    `bson:"signal_dbm"       json:"signalDbm"`
 	SignalLevel     int    `bson:"signal_level"     json:"signalLevel"`
+	// Signal détaillé envoyé par l'APK dans `extra` : RSRP/RSRQ (LTE, 4G),
+	// SS-RSRP/SS-RSRQ (5G SA) et RSSI WiFi. Pointeurs : nil = l'appareil n'a
+	// pas fourni la mesure (les enregistrements antérieurs n'en ont pas).
+	SignalRsrp   *int `bson:"signal_rsrp,omitempty"    json:"signalRsrp,omitempty"`
+	SignalRsrq   *int `bson:"signal_rsrq,omitempty"    json:"signalRsrq,omitempty"`
+	SignalNrRsrp *int `bson:"signal_nr_rsrp,omitempty" json:"signalNrRsrp,omitempty"`
+	SignalNrRsrq *int `bson:"signal_nr_rsrq,omitempty" json:"signalNrRsrq,omitempty"`
+	WifiRssi     *int `bson:"wifi_rssi,omitempty"      json:"wifiRssi,omitempty"`
+	// Vue consolidée pour le dashboard, calculée après lecture par
+	// [consolidateSignal] et JAMAIS stockée : RSRP/RSRQ = 4G puis repli 5G
+	// SA, RSSI = WiFi. nil = non mesuré (« — » côté dashboard, jamais un 0
+	// qui dirait « signal nul »).
+	Rsrp *int `bson:"-" json:"rsrp,omitempty"`
+	Rsrq *int `bson:"-" json:"rsrq,omitempty"`
+	Rssi *int `bson:"-" json:"rssi,omitempty"`
 	// IMP-07 : perte de paquets vers le serveur de test, en %. nil = non
 	// mesurée (ancienne version de l'app, test web, relève passive) ; 0 est
 	// une valeur légitime (aucun paquet perdu).
@@ -122,6 +137,16 @@ type mobileExtra struct {
 	Type        string `json:"type"`
 	SignalDbm   int    `json:"signalDbm"`
 	SignalLevel int    `json:"signalLevel"`
+	// Signal détaillé (SignalMetrics.kt) : RSRP/RSRQ de la cellule LTE qui
+	// sert les données (4G), SS-RSRP/SS-RSRQ de la cellule NR (5G SA) et
+	// RSSI du point d'accès WiFi. Pointeurs : la clé est ABSENTE du JSON
+	// quand l'appareil n'a pas fourni la mesure — jamais 0, qui serait
+	// ambigu (mesure nulle ou non mesurée ?).
+	SignalRsrp   *int `json:"signalRsrp"`
+	SignalRsrq   *int `json:"signalRsrq"`
+	SignalNrRsrp *int `json:"signalNrRsrp"`
+	SignalNrRsrq *int `json:"signalNrRsrq"`
+	WifiRssi     *int `json:"wifiRssi"`
 	// IMP-07 : perte de paquets en %, absente si non mesurée.
 	PacketLoss *float64 `json:"packetLoss"`
 }
@@ -146,6 +171,10 @@ type SummaryStats struct {
 	AvgUpload   float64 `json:"avgUpload"`
 	AvgPing     float64 `json:"avgPing"`
 	TestsToday  int64   `json:"testsToday"`
+	// Nombre de tests de débit GÉOLOCALISÉS — la même population que la carte
+	// (/api/dashboard/map). Éclaire l'écart attendu avec totalTests, qui
+	// compte tous les tests (y compris sans coordonnées GPS).
+	GeolocatedTests int64 `json:"geolocatedTests"`
 }
 
 type OperatorStat struct {
@@ -181,6 +210,11 @@ type MapPoint struct {
 	BrowsingScore          float64 `json:"browsingScore"`
 	// IMP-07 : perte de paquets en %, null si non mesurée.
 	PacketLoss *float64 `json:"packetLoss"`
+	// Signal consolidé (voir Document) : RSRP/RSRQ (4G/5G), RSSI (WiFi).
+	// null = non mesuré.
+	Rsrp *int `json:"rsrp,omitempty"`
+	Rsrq *int `json:"rsrq,omitempty"`
+	Rssi *int `json:"rssi,omitempty"`
 }
 
 type HeatPoint struct {
@@ -347,6 +381,16 @@ func (m *MongoDB) FetchSummary() (*SummaryStats, error) {
 	testsToday, _ := m.collection.CountDocuments(ctx,
 		withoutPassive(bson.M{"timestamp": bson.M{"$gte": today}}))
 
+	// Même filtre que FetchMapPoints : les deux chiffres restent cohérents
+	// entre eux (geolocatedTests = longueur de la réponse /map).
+	geolocated, err := m.collection.CountDocuments(ctx, speedOnly(bson.M{
+		"latitude":  bson.M{"$ne": 0},
+		"longitude": bson.M{"$ne": 0},
+	}))
+	if err != nil {
+		return nil, err
+	}
+
 	pipeline := mongo.Pipeline{
 		// Moyennes calculées sur les seuls tests de débit aboutis : les tests
 		// échoués (débit nul) fausseraient la moyenne vers le bas.
@@ -371,7 +415,7 @@ func (m *MongoDB) FetchSummary() (*SummaryStats, error) {
 	}
 	_ = cursor.All(ctx, &agg)
 
-	stats := &SummaryStats{TotalTests: total, TestsToday: testsToday}
+	stats := &SummaryStats{TotalTests: total, TestsToday: testsToday, GeolocatedTests: geolocated}
 	if len(agg) > 0 {
 		stats.AvgDownload = round2(agg[0].AvgDl)
 		stats.AvgUpload = round2(agg[0].AvgUl)
@@ -421,6 +465,10 @@ func (m *MongoDB) FetchResults(page, limit int, operator, networkType, from, to 
 	var docs []Document
 	if err := cursor.All(ctx, &docs); err != nil {
 		return nil, err
+	}
+	// La vue consolidée n'est pas stockée : elle se recalcule à la lecture.
+	for i := range docs {
+		consolidateSignal(&docs[i])
 	}
 	return &ResultsPage{Data: docs, Total: total, Page: page, Limit: limit}, nil
 }
@@ -522,6 +570,7 @@ func (m *MongoDB) FetchMapPoints() ([]MapPoint, error) {
 		dl, _ := strconv.ParseFloat(doc.Download, 64)
 		ul, _ := strconv.ParseFloat(doc.Upload, 64)
 		ping, _ := strconv.ParseFloat(doc.Ping, 64)
+		consolidateSignal(&doc)
 		points = append(points, MapPoint{
 			Lat:          doc.Latitude,
 			Lng:          doc.Longitude,
@@ -540,6 +589,9 @@ func (m *MongoDB) FetchMapPoints() ([]MapPoint, error) {
 			BrowsingAvgLoadMs:      round2(doc.BrowsingAvgLoadMs),
 			BrowsingScore:          round2(doc.BrowsingScore),
 			PacketLoss:             doc.PacketLoss,
+			Rsrp:                   doc.Rsrp,
+			Rsrq:                   doc.Rsrq,
+			Rssi:                   doc.Rssi,
 		})
 	}
 	return points, nil
@@ -763,6 +815,27 @@ func (m *MongoDB) FetchBarometer(download, upload, ping float64, operator string
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// consolidateSignal calcule la vue consolidée du signal d'un Document, telle
+// que la consomme le dashboard : RSRP/RSRQ = mesure LTE (4G) avec repli 5G
+// SA (l'ancre du téléphone reste en LTE en 5G NSA — comportement attendu),
+// RSSI = mesure WiFi. nil = non mesuré : l'enregistrement est antérieur à la
+// collecte, ou l'appareil n'a pas fourni la valeur.
+func consolidateSignal(doc *Document) {
+	doc.Rsrp = firstInt(doc.SignalRsrp, doc.SignalNrRsrp)
+	doc.Rsrq = firstInt(doc.SignalRsrq, doc.SignalNrRsrq)
+	doc.Rssi = doc.WifiRssi
+}
+
+// firstInt renvoie le premier pointeur non nil, ou nil.
+func firstInt(vals ...*int) *int {
+	for _, v := range vals {
+		if v != nil {
+			return v
+		}
+	}
+	return nil
+}
+
 func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 	ts := data.Timestamp
 	if ts.IsZero() {
@@ -813,6 +886,12 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 			doc.PingMin = extra.PingMin
 			doc.SignalDbm = extra.SignalDbm
 			doc.SignalLevel = extra.SignalLevel
+			doc.SignalRsrp = extra.SignalRsrp
+			doc.SignalRsrq = extra.SignalRsrq
+			doc.SignalNrRsrp = extra.SignalNrRsrp
+			doc.SignalNrRsrq = extra.SignalNrRsrq
+			doc.WifiRssi = extra.WifiRssi
+			consolidateSignal(doc)
 			doc.PacketLoss = validPacketLoss(extra.PacketLoss)
 			// Un `extra` sans type explicite provient d'une version antérieure
 			// de l'application mobile : c'était nécessairement un test actif.
