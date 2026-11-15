@@ -820,10 +820,39 @@ func (m *MongoDB) FetchBarometer(download, upload, ping float64, operator string
 // SA (l'ancre du téléphone reste en LTE en 5G NSA — comportement attendu),
 // RSSI = mesure WiFi. nil = non mesuré : l'enregistrement est antérieur à la
 // collecte, ou l'appareil n'a pas fourni la valeur.
+//
+// Repli historique (15/11) : les tests d'avant le bloc signal détaillé ne
+// portent que signal_dbm. En WiFi, signal_dbm EST le RSSI mesuré par
+// Android (WifiInfo) ; en cellulaire, c'est l'ancienne voie RSRP — même
+// règle de consolidation que le service IA (RSRP 4G, repli NR, repli
+// signal_dbm). Un signal_dbm à 0 vaut « non mesuré » (jamais un vrai RSSI
+// nul) : on ne crée pas de signal fictif.
 func consolidateSignal(doc *Document) {
 	doc.Rsrp = firstInt(doc.SignalRsrp, doc.SignalNrRsrp)
 	doc.Rsrq = firstInt(doc.SignalRsrq, doc.SignalNrRsrq)
 	doc.Rssi = doc.WifiRssi
+	if doc.Rssi == nil && isWifiNetwork(doc.NetworkType) && doc.SignalDbm != 0 {
+		dbm := doc.SignalDbm
+		doc.Rssi = &dbm
+	}
+	if doc.Rsrp == nil && isCellularNetwork(doc.NetworkType) && doc.SignalDbm != 0 {
+		dbm := doc.SignalDbm
+		doc.Rsrp = &dbm
+	}
+}
+
+// isWifiNetwork : test effectué sur le Wi-Fi (et non en données mobiles).
+func isWifiNetwork(networkType string) bool {
+	return strings.EqualFold(strings.TrimSpace(networkType), "WiFi")
+}
+
+// isCellularNetwork : test cellulaire 2G/3G/4G/5G (+ variante « mobile »).
+func isCellularNetwork(networkType string) bool {
+	t := strings.ToUpper(strings.TrimSpace(networkType))
+	if len(t) == 2 && (t[0] == '2' || t[0] == '3' || t[0] == '4' || t[0] == '5') && t[1] == 'G' {
+		return true
+	}
+	return t == "MOBILE"
 }
 
 // firstInt renvoie le premier pointeur non nil, ou nil.
