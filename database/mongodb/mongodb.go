@@ -763,6 +763,37 @@ type BarometerResult struct {
 	OperatorDownloadPercentile float64 `json:"operatorDownloadPercentile,omitempty"`
 	OperatorUploadPercentile   float64 `json:"operatorUploadPercentile,omitempty"`
 	OperatorPingPercentile     float64 `json:"operatorPingPercentile,omitempty"`
+	// IMP-09 v2 : médianes de la base comparée et rang du résultat
+	// (1 = le plus rapide ; nombre de mesures battues + 1).
+	MedianDownload float64 `json:"medianDownload"`
+	MedianUpload   float64 `json:"medianUpload"`
+	MedianPing     float64 `json:"medianPing"`
+	DownloadRank   int64   `json:"downloadRank"`
+	UploadRank     int64   `json:"uploadRank"`
+	PingRank       int64   `json:"pingRank"`
+	// Scores de streaming et de navigation (tests non faits par le
+	// testeur, ou jamais testés dans la base : omis).
+	StreamingPercentile float64 `json:"streamingPercentile,omitempty"`
+	BrowsingPercentile  float64 `json:"browsingPercentile,omitempty"`
+	// Sous-groupe opérateur × techno, renvoyé si l'échantillon atteint
+	// minSubgroupSample (10 mesures) : mêmes centiles, plus fins.
+	OperatorTech                   string  `json:"operatorTech,omitempty"`
+	OperatorTechSampleSize         int64   `json:"operatorTechSampleSize,omitempty"`
+	OperatorTechDownloadPercentile float64 `json:"operatorTechDownloadPercentile,omitempty"`
+	OperatorTechUploadPercentile   float64 `json:"operatorTechUploadPercentile,omitempty"`
+	OperatorTechPingPercentile     float64 `json:"operatorTechPingPercentile,omitempty"`
+	// Sous-groupe géographique : mesures dans un rayon de zoneRadiusKm km
+	// autour du test, même seuil d'échantillon.
+	ZoneSampleSize         int64   `json:"zoneSampleSize,omitempty"`
+	ZoneDownloadPercentile float64 `json:"zoneDownloadPercentile,omitempty"`
+	ZoneUploadPercentile   float64 `json:"zoneUploadPercentile,omitempty"`
+	ZonePingPercentile     float64 `json:"zonePingPercentile,omitempty"`
+	// Tendance : les 5 derniers tests du même appareil (DeviceID), du plus
+	// récent au plus ancien. Vide si l'appareil est inconnu de la base.
+	RecentDownloads []float64 `json:"recentDownloads,omitempty"`
+	// Segment réellement appliqué à la comparaison, renvoyé pour que
+	// l'app n'affiche « mesures Wi-Fi » que si le filtrage a eu lieu.
+	NetworkType string `json:"networkType,omitempty"`
 }
 
 // FetchBarometer calcule la position relative d'un résultat (débits en Mb/s,
@@ -779,15 +810,33 @@ type BarometerResult struct {
 //
 // IMP-09 : si [operator] est fourni, le résultat est aussi situé parmi les
 // seules mesures du même opérateur (voir barometerFrom).
-func (m *MongoDB) FetchBarometer(download, upload, ping float64, operator string) (*BarometerResult, error) {
+//
+// IMP-09 v2 : la base comparée est d'abord segmentée par type de connexion
+// ([NetworkType], Wi-Fi ou mobile) — un test Wi-Fi n'est pas comparé à des
+// mesures 4G. Voir BarometerParams pour les autres filtres (techno, zone,
+// tendance).
+func (m *MongoDB) FetchBarometer(p BarometerParams) (*BarometerResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	filter := speedOnly(bson.M{})
+	// Segmentation Wi-Fi / mobile, alignée sur isWifiNetwork et
+	// isCellularNetwork (qui accepte aussi la valeur « MOBILE »).
+	switch strings.ToLower(strings.TrimSpace(p.NetworkType)) {
+	case "wifi":
+		filter["network_type"] = bson.M{"$regex": `^\s*wifi\s*$`, "$options": "i"}
+	case "mobile":
+		filter["network_type"] = bson.M{"$regex": `^\s*([2-5]G|MOBILE)\s*$`, "$options": "i"}
+	}
 	opts := options.Find().
 		SetSort(bson.D{{Key: "timestamp", Value: -1}}).
 		SetLimit(5000).
-		SetProjection(bson.M{"dl": 1, "ul": 1, "ping": 1, "operator": 1, "sim_operator": 1})
+		SetProjection(bson.M{
+			"dl": 1, "ul": 1, "ping": 1, "operator": 1, "sim_operator": 1,
+			"network_type": 1, "cellular_tech": 1,
+			"streaming_score": 1, "browsing_score": 1,
+			"device_id": 1, "latitude": 1, "longitude": 1,
+		})
 	cursor, err := m.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -799,7 +848,7 @@ func (m *MongoDB) FetchBarometer(download, upload, ping float64, operator string
 		return nil, err
 	}
 
-	res := barometerFrom(docs, download, upload, ping, operator)
+	res := barometerFrom(docs, p)
 
 	// Classement des opérateurs, réutilise l'agrégation existante (déjà triée
 	// par nombre de tests ; on la re-trie par débit moyen ici).
