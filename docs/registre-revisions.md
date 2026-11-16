@@ -15,6 +15,7 @@
 
 | 2026-11-11 | ISS-01 | feat | KikaiNoKami | SAWADOGO Hassan Achraf Ammar | `feat/signal-dashboard` | `b9e0edb` | `go build`/`vet` verts ; API `/api/dashboard/results` et `/api/dashboard/map` renvoient rsrp/rsrq (4G puis repli 5G SA) et rssi (WiFi), nil = non mesuré ; `/summary` ajoute geolocatedTests (même filtre que la carte) ; vérification terrain 4G/5G à rejouer sur l'APK (validation classeur = APK réel) | En cours |
 
+| 2026-11-16 | IMP-09 | feat | GLM (OpenCode) | COMPAORE Bobodo Kévin Aymar | `barometre-v2` (PR #27) | `a7ecc65` (fusion squash) | Baromètre v2 serveur : segmentation wifi/mobile, centiles streaming/navigation, sous-groupes techno et zone (~10 km, seuil 10), rangs, médianes, tendance device_id ; 9 tests Go ; vérifié en production le 16/11 | Validé |
 ## Nomenclature V14 vs V11 vs V4 (à lire avant de citer un Sous-ID)
 
 - **V14 (19/10/2026) = V11 + IMP-14** (conditions d'utilisation au premier lancement, P3, `mobilefront`) **+ IMP-15** (prévision de la qualité réseau, P1, `New_web`) : 27 items.
