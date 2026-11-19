@@ -143,3 +143,11 @@ dist/
 
 # Secrets locaux — jamais versionnés
 .env
+
+# Scripts de seed et de purge locaux (base de demonstration) — jamais versionnes.
+# Ils pointent la base Atlas ou le backend local et n ont rien a faire en public.
+seed_db.py
+seed_4.py
+seed_via_api.py
+purge_seed.py
+purge_render.py
