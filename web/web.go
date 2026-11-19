@@ -93,6 +93,7 @@ func ListenAndServe(conf *config.Config) error {
 	r.Get(conf.BaseURL+"/api/dashboard/heatmap", results.DashboardHeatmap)
 	r.Get(conf.BaseURL+"/api/dashboard/stats/advanced", results.DashboardAdvancedStats)
 	r.Get(conf.BaseURL+"/api/dashboard/barometer", results.BarometerHandler)
+	r.Get(conf.BaseURL+"/api/dashboard/qoe", results.DashboardQoe)
 
 	// Comptes utilisateurs (IMP-03)
 	r.Post(conf.BaseURL+"/api/auth/register", results.Register)

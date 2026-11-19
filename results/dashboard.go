@@ -86,8 +86,19 @@ func DashboardOperators(w http.ResponseWriter, r *http.Request) {
 
 // DashboardMap returns geolocated test points for the map.
 // GET /api/dashboard/map
+// GET /api/dashboard/map?usage=qoe&reseau=mobile&operator=&tech=&period=month
 func DashboardMap(w http.ResponseWriter, r *http.Request) {
 	if !mongoRequired(w) {
+		return
+	}
+	if r.URL.Query().Get("usage") == "qoe" {
+		points, err := database.MongoDB.FetchQoeMapPoints(qoeFilterFromRequest(r))
+		if err != nil {
+			log.Errorf("DashboardMap (qoe) error: %s", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		jsonResponse(w, points)
 		return
 	}
 	points, err := database.MongoDB.FetchMapPoints()

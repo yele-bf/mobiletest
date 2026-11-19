@@ -25,38 +25,54 @@ type MongoDB struct {
 
 // Document is the MongoDB document structure stored in the collection.
 type Document struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"      json:"id"`
-	UUID        string             `bson:"uuid"               json:"uuid"`
-	Timestamp   time.Time          `bson:"timestamp"          json:"timestamp"`
+	ID        primitive.ObjectID `bson:"_id,omitempty"      json:"id"`
+	UUID      string             `bson:"uuid"               json:"uuid"`
+	Timestamp time.Time          `bson:"timestamp"          json:"timestamp"`
 	// Champs sensibles (PII) : stockés en base mais JAMAIS renvoyés par l'API
 	// publique du dashboard (json:"-"). Voir audit sécurité #1.
-	IPAddress   string             `bson:"ip_address"         json:"-"`
-	ISPInfo     string             `bson:"isp_info"           json:"-"`
-	Download    string             `bson:"dl"                 json:"download"`
-	Upload      string             `bson:"ul"                 json:"upload"`
-	Ping        string             `bson:"ping"               json:"ping"`
-	Jitter      string             `bson:"jitter"             json:"jitter"`
-	ExtraRaw    string             `bson:"extra_raw"          json:"-"`
-	UserAgent   string             `bson:"user_agent"         json:"-"`
-	Language    string             `bson:"language"           json:"-"`
-	Log         string             `bson:"log"                json:"-"`
+	IPAddress string `bson:"ip_address"         json:"-"`
+	ISPInfo   string `bson:"isp_info"           json:"-"`
+	Download  string `bson:"dl"                 json:"download"`
+	Upload    string `bson:"ul"                 json:"upload"`
+	Ping      string `bson:"ping"               json:"ping"`
+	Jitter    string `bson:"jitter"             json:"jitter"`
+	ExtraRaw  string `bson:"extra_raw"          json:"-"`
+	UserAgent string `bson:"user_agent"         json:"-"`
+	Language  string `bson:"language"           json:"-"`
+	Log       string `bson:"log"                json:"-"`
 	// Mobile-specific parsed fields
-	Operator    string  `bson:"operator"     json:"operator"`
-	NetworkType string  `bson:"network_type" json:"networkType"`
-	SimOperator string  `bson:"sim_operator" json:"simOperator"`
+	Operator     string `bson:"operator"     json:"operator"`
+	NetworkType  string `bson:"network_type" json:"networkType"`
+	SimOperator  string `bson:"sim_operator" json:"simOperator"`
 	CellularTech string `bson:"cellular_tech" json:"cellularTech"`
-	DeviceModel string  `bson:"device_model" json:"deviceModel"`
+	DeviceModel  string `bson:"device_model" json:"deviceModel"`
 	// IMP-13 : UUID d'appareil anonyme et stable, généré par l'app. Permet le
 	// suivi longitudinal des mesures par appareil sans aucune donnée privée.
-	DeviceID    string  `bson:"device_id"    json:"deviceId"`
+	DeviceID string `bson:"device_id"    json:"deviceId"`
 	// IMP-03 : identifiant du compte connecté, vide si le test est anonyme.
 	// Jamais renvoyé par l'API (json:"-").
-	UserID string `bson:"user_id,omitempty" json:"-"`
-	Location    string  `bson:"location"     json:"location"`
-	Latitude    float64 `bson:"latitude"     json:"latitude"`
-	Longitude   float64 `bson:"longitude"    json:"longitude"`
-	QoERating   int     `bson:"qoe_rating"   json:"qoeRating"`
-	QoeSat      string  `bson:"qoe_sat"      json:"qoeSatisfaction"`
+	UserID    string  `bson:"user_id,omitempty" json:"-"`
+	Location  string  `bson:"location"     json:"location"`
+	Latitude  float64 `bson:"latitude"     json:"latitude"`
+	Longitude float64 `bson:"longitude"    json:"longitude"`
+	QoERating int     `bson:"qoe_rating"   json:"qoeRating"`
+	QoeSat    string  `bson:"qoe_sat"      json:"qoeSatisfaction"`
+	// Questionnaire QoE détaillé (18/11). Les valeurs reprennent celles du
+	// XLSForm terrain. Les commentaires libres et le champ « Autre » restent
+	// internes : jamais renvoyés par l'API publique (json:"-").
+	QoeTestType            string `bson:"qoe_test_type,omitempty"            json:"qoeTestType,omitempty"`
+	QoeReseau              string `bson:"qoe_reseau,omitempty"               json:"qoeReseau,omitempty"`
+	QoeAge                 string `bson:"qoe_age,omitempty"                  json:"qoeAge,omitempty"`
+	QoeGenre               string `bson:"qoe_genre,omitempty"                json:"qoeGenre,omitempty"`
+	QoeAnciennete          string `bson:"qoe_anciennete,omitempty"           json:"qoeAnciennete,omitempty"`
+	QoeVitesse             int    `bson:"qoe_vitesse,omitempty"              json:"qoeVitesse,omitempty"`
+	QoeDifficultePages     string `bson:"qoe_difficulte_pages,omitempty"     json:"qoeDifficultePages,omitempty"`
+	QoeQualiteVideo        string `bson:"qoe_qualite_video,omitempty"        json:"qoeQualiteVideo,omitempty"`
+	QoeCoupuresVideo       string `bson:"qoe_coupures_video,omitempty"       json:"qoeCoupuresVideo,omitempty"`
+	QoeSatisfactionGlobale string `bson:"qoe_satisfaction_globale,omitempty" json:"qoeSatisfactionGlobale,omitempty"`
+	QoeAmeliorations       string `bson:"qoe_ameliorations,omitempty"        json:"qoeAmeliorations,omitempty"`
+	QoeAmeliorationsAutre  string `bson:"qoe_ameliorations_autre,omitempty"  json:"-"`
+	QoeCommentaire         string `bson:"qoe_commentaire,omitempty"          json:"-"`
 	// Streaming test results (zero values = test not performed)
 	StreamingStartupMs     int     `bson:"streaming_startup_ms"     json:"streamingStartupMs"`
 	StreamingRebufferCount int     `bson:"streaming_rebuffer_count" json:"streamingRebufferCount"`
@@ -117,6 +133,20 @@ type mobileExtra struct {
 	Longitude       float64 `json:"longitude"`
 	QoERating       int     `json:"qoeRating"`
 	QoeSatisfaction string  `json:"qoeSatisfaction"`
+	// Questionnaire QoE détaillé (18/11), clés plates.
+	QoeTestType            string `json:"qoeTestType"`
+	QoeReseau              string `json:"qoeReseau"`
+	QoeAge                 string `json:"qoeAge"`
+	QoeGenre               string `json:"qoeGenre"`
+	QoeAnciennete          string `json:"qoeAnciennete"`
+	QoeVitesse             int    `json:"qoeVitesse"`
+	QoeDifficultePages     string `json:"qoeDifficultePages"`
+	QoeQualiteVideo        string `json:"qoeQualiteVideo"`
+	QoeCoupuresVideo       string `json:"qoeCoupuresVideo"`
+	QoeSatisfactionGlobale string `json:"qoeSatisfactionGlobale"`
+	QoeAmeliorations       string `json:"qoeAmeliorations"`
+	QoeAmeliorationsAutre  string `json:"qoeAmeliorationsAutre"`
+	QoeCommentaire         string `json:"qoeCommentaire"`
 	// Streaming test (optional, sent when the test was performed)
 	StreamingStartupMs     int     `json:"streamingStartupMs"`
 	StreamingRebufferCount int     `json:"streamingRebufferCount"`
@@ -191,17 +221,17 @@ type OperatorStat struct {
 }
 
 type MapPoint struct {
-	Lat         float64 `json:"lat"`
-	Lng         float64 `json:"lng"`
-	Operator    string  `json:"operator"`
-	NetworkType string  `json:"networkType"`
-	SimOperator string  `json:"simOperator"`
-	CellularTech string `json:"cellularTech"`
-	Download    float64 `json:"download"`
-	Upload      float64 `json:"upload"`
-	Ping        float64 `json:"ping"`
-	Location    string  `json:"location"`
-	Timestamp   string  `json:"timestamp"`
+	Lat          float64 `json:"lat"`
+	Lng          float64 `json:"lng"`
+	Operator     string  `json:"operator"`
+	NetworkType  string  `json:"networkType"`
+	SimOperator  string  `json:"simOperator"`
+	CellularTech string  `json:"cellularTech"`
+	Download     float64 `json:"download"`
+	Upload       float64 `json:"upload"`
+	Ping         float64 `json:"ping"`
+	Location     string  `json:"location"`
+	Timestamp    string  `json:"timestamp"`
 	// Streaming & browsing metrics (zero = test not performed)
 	StreamingScore         float64 `json:"streamingScore"`
 	StreamingMaxResolution string  `json:"streamingMaxResolution"`
@@ -215,6 +245,15 @@ type MapPoint struct {
 	Rsrp *int `json:"rsrp,omitempty"`
 	Rsrq *int `json:"rsrq,omitempty"`
 	Rssi *int `json:"rssi,omitempty"`
+	// Couche « Qualité perçue » de la carte (18/11) : champs renseignés
+	// uniquement par /api/dashboard/map?usage=qoe.
+	QoeTestType      string `json:"qoeTestType,omitempty"`
+	QoeReseau        string `json:"qoeReseau,omitempty"`
+	QoeOperator      string `json:"qoeOperator,omitempty"`
+	QoeSatisfaction  string `json:"qoeSatisfaction,omitempty"`
+	QoeRating        int    `json:"qoeRating,omitempty"`
+	QoeVitesse       int    `json:"qoeVitesse,omitempty"`
+	QoeCoupuresVideo string `json:"qoeCoupuresVideo,omitempty"`
 }
 
 type HeatPoint struct {
@@ -572,17 +611,17 @@ func (m *MongoDB) FetchMapPoints() ([]MapPoint, error) {
 		ping, _ := strconv.ParseFloat(doc.Ping, 64)
 		consolidateSignal(&doc)
 		points = append(points, MapPoint{
-			Lat:          doc.Latitude,
-			Lng:          doc.Longitude,
-			Operator:     doc.Operator,
-			NetworkType:  doc.NetworkType,
-			SimOperator:  doc.SimOperator,
-			CellularTech: doc.CellularTech,
-			Download:     round2(dl),
-			Upload:      round2(ul),
-			Ping:        round2(ping),
-			Location:    doc.Location,
-			Timestamp:   doc.Timestamp.Format("02/01/2006 15:04"),
+			Lat:                    doc.Latitude,
+			Lng:                    doc.Longitude,
+			Operator:               doc.Operator,
+			NetworkType:            doc.NetworkType,
+			SimOperator:            doc.SimOperator,
+			CellularTech:           doc.CellularTech,
+			Download:               round2(dl),
+			Upload:                 round2(ul),
+			Ping:                   round2(ping),
+			Location:               doc.Location,
+			Timestamp:              doc.Timestamp.Format("02/01/2006 15:04"),
 			StreamingScore:         round2(doc.StreamingScore),
 			StreamingMaxResolution: doc.StreamingMaxResolution,
 			StreamingRebufferRatio: round2(doc.StreamingRebufferRatio),
@@ -748,10 +787,10 @@ func (m *MongoDB) FetchAdvancedStats() ([]OperatorAdvancedStats, error) {
 
 // BarometerResult situe un résultat de test dans la base des mesures passées.
 type BarometerResult struct {
-	DownloadPercentile float64       `json:"downloadPercentile"`
-	UploadPercentile   float64       `json:"uploadPercentile"`
-	PingPercentile     float64       `json:"pingPercentile"`
-	SampleSize         int64         `json:"sampleSize"`
+	DownloadPercentile float64        `json:"downloadPercentile"`
+	UploadPercentile   float64        `json:"uploadPercentile"`
+	PingPercentile     float64        `json:"pingPercentile"`
+	SampleSize         int64          `json:"sampleSize"`
 	Operators          []OperatorStat `json:"operators"`
 	// IMP-09 : moyenne nationale et comparaison aux seuls clients de
 	// l'opérateur du testeur (paramètre `operator`). Les champs Operator*
@@ -950,6 +989,19 @@ func (m *MongoDB) toDocument(data *schema.TelemetryData) *Document {
 			doc.Longitude = extra.Longitude
 			doc.QoERating = extra.QoERating
 			doc.QoeSat = extra.QoeSatisfaction
+			doc.QoeTestType = extra.QoeTestType
+			doc.QoeReseau = extra.QoeReseau
+			doc.QoeAge = extra.QoeAge
+			doc.QoeGenre = extra.QoeGenre
+			doc.QoeAnciennete = extra.QoeAnciennete
+			doc.QoeVitesse = extra.QoeVitesse
+			doc.QoeDifficultePages = extra.QoeDifficultePages
+			doc.QoeQualiteVideo = extra.QoeQualiteVideo
+			doc.QoeCoupuresVideo = extra.QoeCoupuresVideo
+			doc.QoeSatisfactionGlobale = extra.QoeSatisfactionGlobale
+			doc.QoeAmeliorations = extra.QoeAmeliorations
+			doc.QoeAmeliorationsAutre = extra.QoeAmeliorationsAutre
+			doc.QoeCommentaire = extra.QoeCommentaire
 			doc.StreamingStartupMs = extra.StreamingStartupMs
 			doc.StreamingRebufferCount = extra.StreamingRebufferCount
 			doc.StreamingRebufferRatio = extra.StreamingRebufferRatio
