@@ -14,4 +14,8 @@ services:
       - key: SPEEDTEST_DATABASE_CONNECTION_STRING
         sync: false
     autoDeploy: false
+    # Sonde de disponibilite : l'API de synthese du tableau de bord est la
+    # route la plus representative (Atlas + agregations MongoDB). Un service
+    # qui repond 200 ici sert reellement l'application.
+    healthCheckPath: /api/dashboard/summary
     region: frankfurt
