@@ -13,5 +13,5 @@ services:
         value: yele_speedtest
       - key: SPEEDTEST_DATABASE_CONNECTION_STRING
         sync: false
-    autoDeploy: true
+    autoDeploy: false
     region: frankfurt
